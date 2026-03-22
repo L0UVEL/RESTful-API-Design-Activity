@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Appointments{% endblock %}
+
+{% block navbar_title %}Manage Appointments{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        {% if not appointments %}
+            <div class="text-center mt-5 text-muted">
+                <i class="bi bi-calendar-x" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">No appointments scheduled</h5>
+            </div>
+        {% else %}
+            <div class="accordion" id="appointmentsAccordion">
+                {% for appt in appointments %}
+                <div class="accordion-item shadow-sm mb-3 border-0 rounded-3 overflow-hidden">
+                    <h2 class="accordion-header" id="heading{{ appt.id }}">
+                        <button class="accordion-button collapsed bg-white text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ appt.id }}">
+                            <div class="d-flex align-items-center w-100 me-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 text-white" style="width: 40px; height: 40px; background-color: #800000;">
+                                    {{ appt.user.first_name|make_list|first|default:"?"|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold">User: {{ appt.user.first_name }} {{ appt.user.last_name }}</h6>
+                                    <small class="text-muted">{{ appt.appointment_date|date:"M j, Y - g:i a" }}</small>
+                                </div>
+                                <div>
+                                    {% if appt.status|lower == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif appt.status|lower == 'approved' %}
+                                        <span class="badge bg-primary">Approved</span>
+                                    {% elif appt.status|lower == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ appt.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ appt.id }}" class="accordion-collapse collapse" data-bs-parent="#appointmentsAccordion">
+                        <div class="accordion-body bg-light">
+                            <h6 class="fw-bold">Reason: {{ appt.reason_for_visit }}</h6>
+                            <p class="mb-2">Status: {{ appt.status|upper }}</p>
+                            <hr>
+                            <h6 class="fw-bold">Health Information:</h6>
+                            {% if appt.user.health_profile %}
+                                <p class="mb-1">{{ appt.user.health_profile.health_information }}</p>
+                                <p class="mb-1">Blood Type: {{ appt.user.health_profile.blood_type }}</p>
+                                <p class="mb-1">Emergency Contact: {{ appt.user.health_profile.emergency_contact }}</p>
+                                <p class="mb-3 text-muted small">Last Updated: {{ appt.user.health_profile.last_updated|date:"Y-m-d" }}</p>
+                            {% else %}
+                                <p class="text-muted fst-italic">No health profile available</p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <!-- Mock actions to be wired with JS/API -->
+                                {% if appt.status|lower == 'pending' %}
+                                    <button class="btn btn-outline-danger">Decline</button>
+                                    <button class="btn btn-primary">Approve</button>
+                                {% elif appt.status|lower == 'approved' %}
+                                    <button class="btn btn-success">Mark Completed</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

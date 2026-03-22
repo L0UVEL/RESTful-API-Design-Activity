@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Add New User{% endblock %}
+
+{% block navbar_title %}Add New User{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="mt-2 mb-4">
+            <h3 class="fw-light">Register Student Account</h3>
+        </div>
+
+        <!-- Bulk Upload Section -->
+        <button class="btn btn-outline-primary w-100 py-3 mb-2 rounded-3" onclick="document.getElementById('file-upload').click()">
+            <i class="bi bi-upload me-2"></i> Bulk Upload CSV
+        </button>
+        <input type="file" id="file-upload" accept=".csv" class="d-none">
+        <div class="text-center mb-4">
+            <small class="text-muted">CSV Format: Student ID, Name, Program, Email (Header row required)</small>
+        </div>
+
+        <hr class="mb-4">
+
+        <h5 class="mb-4">Single Registration</h5>
+
+        <form id="singleRegistrationForm">
+            <!-- Student ID -->
+            <div class="mb-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-person-badge"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" id="studentId" placeholder="Student ID" required>
+                </div>
+            </div>
+
+            <!-- Full Name -->
+            <div class="mb-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-person"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" id="fullName" placeholder="Full Name" required>
+                </div>
+            </div>
+
+            <!-- Program -->
+            <div class="mb-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-mortarboard"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" id="program" placeholder="Program/Course (e.g. BSCS, BSIT)" required>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control border-start-0 ps-0" id="email" placeholder="Email Address" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill shadow-sm" id="submitBtn">
+                Create Account
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">User Registered</h5>
+            </div>
+            <div class="modal-body">
+                <p>The user has been successfully registered.</p>
+                <div class="mb-3">
+                    <strong>Login Credentials:</strong><br>
+                    Email: <span id="successEmail"></span><br>
+                    Password: <strong id="successPassword" class="fs-5"></strong>
+                </div>
+                <small class="text-info fst-italic">An email with these credentials has been sent to the student.</small>
+            </div>
+            <div class="modal-footer border-0">
+                <a href="/admin-dashboard" class="btn btn-primary rounded-pill px-4">Done</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('singleRegistrationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+        btn.disabled = true;
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const nameParts = fullName.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+        const email = document.getElementById('email').value.trim();
+        const randPass = Math.random().toString(36).slice(-8); // Random string mock
+        
+        const payload = {
+            student_id: document.getElementById('studentId').value.trim(),
+            first_name: firstName,
+            last_name: lastName,
+            program: document.getElementById('program').value.trim(),
+            email: email,
+            username: email,
+            password: randPass // Real implementation would set this safely via view
+        };
+
+        fetch('/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(payload)
+        }).then(res => {
+            if(res.ok) {
+                // Show Success Modal
+                document.getElementById('successEmail').innerText = email;
+                document.getElementById('successPassword').innerText = randPass;
+                var myModal = new bootstrap.Modal(document.getElementById('successModal'));
+                myModal.show();
+            } else {
+                alert('Error creating user.');
+                btn.innerHTML = 'Create Account';
+                btn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
